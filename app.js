@@ -96,8 +96,10 @@ async function updateSubsCollection() {
 cron.schedule("0 */6 * * *", () => {
   updateSubsCollection();
 });
-
-app.get("/api/subs", (req, res) => {
+app.get("/", (req, res) => {
+  redirect("/api");
+});
+app.get("/api", (req, res) => {
   SubsModel.find({}, (err, data) => {
     res.send(data);
   });
