@@ -1,24 +1,22 @@
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const Axios = require("axios");
 require("dotenv").config();
-var cron = require("node-cron");
+const cron = require("node-cron");
+const SubsModel = require("./models/Subs");
 const extractText = require("./textExtractor");
+const { log } = require("console");
+const app = express();
 
 mongoose.connect(
-  "mongodb+srv://ozkaralvarez98:MUEwu6FihlSxCYku@cluster0.7rrgp4l.mongodb.net/Subreddits?retryWrites=true&w=majority"
+  `mongodb+srv://ozkaralvarez98:${process.env.DB_PWD}@cluster0.7rrgp4l.mongodb.net/Subreddits?retryWrites=true&w=majority`
 );
-const SubsModel = require("./models/Subs");
 
-var apiRouter = require("./routes/api");
-
-const { log } = require("console");
-
-var app = express();
+const apiRouter = require("./routes/api");
 
 app.use(logger("dev"));
 app.use(cors());
@@ -26,22 +24,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-function getArticleData() {
+async function getArticleData() {
   try {
     // extract text from each post link and save it in the database
-    SubsModel.find({}, (err, data) => {
-      data.forEach((sub) => {
-        // create array of promises from each post updated
-        const promises = sub.posts.map(async (post) => {
-          const extractionData = await extractText(post.link);
-          post.text = extractionData?.text;
-          post.summary = extractionData?.summary;
-          return post;
-        });
-        // wait for all promises to resolve and save the sub DB
-        Promise.all(promises).then(() => {
-          sub.save();
-        });
+    const data = await SubsModel.find({});
+    data.forEach((sub) => {
+      // create array of promises from each post updated
+      const promises = sub.posts.map(async (post) => {
+        const extractionData = await extractText(post.link);
+        post.text = extractionData?.text;
+        post.summary = extractionData?.summary;
+        return post;
+      });
+      // wait for all promises to resolve and save the sub DB
+      Promise.all(promises).then(() => {
+        sub.save();
       });
     });
   } catch (err) {
