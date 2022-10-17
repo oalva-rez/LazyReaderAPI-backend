@@ -14,8 +14,8 @@ mongoose.connect(
 );
 const SubsModel = require("./models/Subs");
 
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
+var apiRouter = require("./routes/api");
+
 const { log } = require("console");
 
 var app = express();
@@ -31,15 +31,16 @@ function getArticleData() {
     // extract text from each post link and save it in the database
     SubsModel.find({}, (err, data) => {
       data.forEach((sub) => {
+        // create array of promises from each post updated
         const promises = sub.posts.map(async (post) => {
           const extractionData = await extractText(post.link);
           post.text = extractionData?.text;
           post.summary = extractionData?.summary;
           return post;
         });
+        // wait for all promises to resolve and save the sub DB
         Promise.all(promises).then(() => {
           sub.save();
-          console.log("articles extracted and saved");
         });
       });
     });
@@ -55,13 +56,12 @@ async function updateSubsCollection() {
     // for each sub
     const promises = data.map(async (sub) => {
       // get the posts
-      console.log(`sub: ${sub.name} iteration`);
       const response = await Axios.get(
         `https://www.reddit.com/r/${sub.name}/top/.json`
       );
       // for each post
       response.data.data.children.forEach((post) => {
-        // check if post contains link
+        // check if post is self (text post)
         if (!post.data.is_self) {
           // check if the post is already in the database
           let found = false;
@@ -86,23 +86,30 @@ async function updateSubsCollection() {
       await sub.save();
     });
     Promise.all(promises).then(() => {
-      console.log("here");
       getArticleData();
     });
   } catch (err) {
     console.log(err);
   }
 }
+
+// update the database every 6 hours
 cron.schedule("0 */6 * * *", () => {
   updateSubsCollection();
 });
+
+app.use("/api", apiRouter);
+
 app.get("/", (req, res) => {
-  res.redirect("/api");
-});
-app.get("/api", (req, res) => {
-  SubsModel.find({}, (err, data) => {
-    res.send(data);
-  });
+  res.redirect("/api/all");
 });
 
+app.all("*", (req, res) => {
+  res.status(404);
+  if (req.accepts("json")) {
+    res.json({ message: "404 Not Found" });
+  } else {
+    res.type("txt").send("404 Not Found");
+  }
+});
 module.exports = app;
