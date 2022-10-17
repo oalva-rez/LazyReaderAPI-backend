@@ -97,7 +97,7 @@ cron.schedule("0 */6 * * *", () => {
   updateSubsCollection();
 });
 app.get("/", (req, res) => {
-  redirect("/api");
+  res.redirect("/api");
 });
 app.get("/api", (req, res) => {
   SubsModel.find({}, (err, data) => {
