@@ -14,7 +14,7 @@ const PostsSchema = new mongoose.Schema({
     required: false,
   },
   summary: {
-    type: String,
+    type: Array,
     required: false,
   },
 });

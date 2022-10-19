@@ -31,10 +31,12 @@ async function getArticleData() {
     data.forEach((sub) => {
       // create array of promises from each post updated
       const promises = sub.posts.map(async (post) => {
-        const extractionData = await extractText(post.link);
-        post.text = extractionData?.text;
-        post.summary = extractionData?.summary;
-        return post;
+        if (post.text === "" && post.summary?.length === 0) {
+          const extractionData = await extractText('"' + post.link + '"');
+          post.text = extractionData?.text;
+          post.summary = extractionData?.summary;
+          return post;
+        }
       });
       // wait for all promises to resolve and save the sub DB
       Promise.all(promises).then(() => {
@@ -74,7 +76,7 @@ async function updateSubsCollection() {
               title: post.data.title,
               link: post.data.url,
               text: "",
-              summary: "",
+              summary: [],
             });
           }
         }
@@ -83,6 +85,7 @@ async function updateSubsCollection() {
       await sub.save();
     });
     Promise.all(promises).then(() => {
+      console.log("Subs updated");
       getArticleData();
     });
   } catch (err) {
@@ -90,10 +93,16 @@ async function updateSubsCollection() {
   }
 }
 
+// -----------------NO UPDATE-----------------
+
+// CURRENTLY NOT UDPDATING DUE TO API LIMITS
+
 // update the database every 6 hours
-cron.schedule("0 */6 * * *", () => {
-  updateSubsCollection();
-});
+// cron.schedule("0 */6 * * *", () => {
+// updateSubsCollection();
+// });
+
+// -----------------NO UPDATE-----------------
 
 app.use("/api", apiRouter);
 
