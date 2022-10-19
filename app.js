@@ -12,9 +12,7 @@ const extractText = require("./textExtractor");
 const { log } = require("console");
 const app = express();
 
-mongoose.connect(
-  `mongodb+srv://ozkaralvarez98:${process.env.DB_PWD}@cluster0.7rrgp4l.mongodb.net/Subreddits?retryWrites=true&w=majority`
-);
+mongoose.connect(process.env.DB_CONN);
 
 const apiRouter = require("./routes/api");
 
