@@ -56,6 +56,7 @@ async function updateSubsCollection() {
       const response = await Axios.get(
         `https://www.reddit.com/r/${sub.name}/top/.json`
       );
+
       // for each post
       response.data.data.children.forEach((post) => {
         // check if post is self (text post)
@@ -75,6 +76,8 @@ async function updateSubsCollection() {
               link: post.data.url,
               text: "",
               summary: [],
+              upvotes: post.data.ups,
+              thumbnail: post.data.thumbnail,
             });
           }
         }
@@ -83,7 +86,6 @@ async function updateSubsCollection() {
       await sub.save();
     });
     Promise.all(promises).then(() => {
-      console.log("Subs updated");
       getArticleData();
     });
   } catch (err) {
@@ -99,7 +101,6 @@ async function updateSubsCollection() {
 // cron.schedule("0 */6 * * *", () => {
 // updateSubsCollection();
 // });
-
 // -----------------NO UPDATE-----------------
 
 app.use("/api", apiRouter);

@@ -17,6 +17,14 @@ const PostsSchema = new mongoose.Schema({
     type: Array,
     required: false,
   },
+  upvotes: {
+    type: Number,
+    required: false,
+  },
+  thumbnail: {
+    type: String,
+    required: false,
+  },
 });
 
 const SubsSchema = new mongoose.Schema({
