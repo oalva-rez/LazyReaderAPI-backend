@@ -14,7 +14,7 @@ const PostsSchema = new mongoose.Schema({
     required: false,
   },
   summary: {
-    type: Array,
+    type: String,
     required: false,
   },
   upvotes: {

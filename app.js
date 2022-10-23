@@ -1,7 +1,5 @@
 const express = require("express");
-const path = require("path");
 const cookieParser = require("cookie-parser");
-const logger = require("morgan");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const Axios = require("axios");
@@ -9,7 +7,6 @@ require("dotenv").config();
 const cron = require("node-cron");
 const SubsModel = require("./models/Subs");
 const extractText = require("./textExtractor");
-const { log } = require("console");
 const app = express();
 
 mongoose.connect(process.env.DB_CONN);
@@ -29,8 +26,9 @@ async function getArticleData() {
     data.forEach((sub) => {
       // create array of promises from each post updated
       const promises = sub.posts.map(async (post) => {
-        if (post.text === "" && post.summary?.length === 0) {
-          const extractionData = await extractText('"' + post.link + '"');
+        if (post.text === "" && post.summary === "") {
+          console.log("saving");
+          const extractionData = await extractText(post.link);
           post.text = extractionData?.text;
           post.summary = extractionData?.summary;
           return post;
@@ -75,7 +73,7 @@ async function updateSubsCollection() {
               title: post.data.title,
               link: post.data.url,
               text: "",
-              summary: [],
+              summary: "",
               upvotes: post.data.ups,
               thumbnail: post.data.thumbnail,
             });
